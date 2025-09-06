@@ -36,21 +36,56 @@ def authenticate_request():
 def onboard_user():
     try:
         data = request.json
-        id_token = request.headers.get('Authorization').split('Bearer ')[1]
+        
+        # Validate required fields
+        required_fields = ['name', 'skills', 'preferred_roles', 'wants_local_matches']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # Get authentication token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Authorization header missing or invalid'}), 401
+            
+        id_token = auth_header.split('Bearer ')[1]
         uid = verify_firebase_token(id_token)
+        
+        # Handle location data
+        if data.get('location') is None:
+            location_data = {
+                'city': 'Unknown',
+                'country': 'Unknown',
+                'coords': {'lat': 0, 'lng': 0}
+            }
+        else:
+            location_data = data['location']
+            # Ensure location has required structure
+            if 'city' not in location_data:
+                location_data['city'] = 'Unknown'
+            if 'country' not in location_data:
+                location_data['country'] = 'Unknown'
+            if 'coords' not in location_data:
+                location_data['coords'] = {'lat': 0, 'lng': 0}
         
         user_data = {
             'name': data['name'],
             'skills': data['skills'],
             'preferred_roles': data['preferred_roles'],
             'wants_local_matches': data['wants_local_matches'],
-            'location': data['location'],
+            'location': location_data,
             'last_active': firestore.SERVER_TIMESTAMP
         }
+        
         update_user_profile(uid, user_data)
-        return jsonify({'status': 'success'}), 200
+        return jsonify({'status': 'success', 'user_id': uid}), 200
+        
+    except ValueError as e:
+        # Authentication errors
+        return jsonify({'error': str(e)}), 401
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        print(f"Onboarding error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/users/me', methods=['GET'])
 def get_current_user():
