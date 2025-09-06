@@ -76,8 +76,9 @@ def onboard_user():
             'location': location_data,
             'last_active': firestore.SERVER_TIMESTAMP
         }
-        
+        # print(user_data)
         update_user_profile(uid, user_data)
+        print(user_data)
         return jsonify({'status': 'success', 'user_id': uid}), 200
         
     except ValueError as e:
@@ -91,6 +92,7 @@ def onboard_user():
 def get_current_user():
     try:
         user = get_user_profile(request.uid)
+        print(user)
         return jsonify(user), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 400
