@@ -2,6 +2,8 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import json
 import os
+import load_dotenv
+load_dotenv.load_dotenv()
 
 # Initialize Firebase
 firebase_cred_str = os.environ.get('FIREBASE_CREDENTIALS')
