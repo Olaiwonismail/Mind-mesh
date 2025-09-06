@@ -1,0 +1,7 @@
+flask
+flask-cors
+firebase-admin
+groq
+google-cloud-firestore
+python-dotenv
+requests
